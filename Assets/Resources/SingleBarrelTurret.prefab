@@ -24,7 +24,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5311347845553448429}
   m_LocalRotation: {x: 0.7071068, y: -0, z: 0, w: 0.7071068}
-  m_LocalPosition: {x: 0, y: -1.05, z: -0}
+  m_LocalPosition: {x: 0, y: -1.05, z: 0}
   m_LocalScale: {x: 10, y: -10, z: 4.347827}
   m_Children:
   - {fileID: 5311347846782601721}
@@ -396,10 +396,13 @@ MonoBehaviour:
   XAxis: {fileID: 5311347846779053237}
   YAxis: {fileID: 5311347847299508957}
   Beam: {fileID: 5311347846782601720}
+  Barrel: {fileID: 5311347846779053237}
   Tank: {fileID: 0}
   TurnSpeed: 90
-  TurretRange: 20
+  TurretRange: 100
   Damage: 40
+  MissilePrefab: {fileID: 7532799025525363323, guid: 1f5756f9b5b1945bb8a1f4f60257aed3,
+    type: 3}
   ControlAxis: Fire1
 --- !u!114 &767205092107549591
 MonoBehaviour:

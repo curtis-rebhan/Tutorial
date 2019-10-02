@@ -100,12 +100,11 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1879411010777996654}
-  - component: {fileID: 1879411010777996641}
   - component: {fileID: 1879411010777996640}
-  - component: {fileID: 1879411010777996655}
   - component: {fileID: 1879411010777996652}
   - component: {fileID: 6495402459184938329}
   - component: {fileID: 3394456000985237395}
+  - component: {fileID: 7562809920020705959}
   m_Layer: 0
   m_Name: Tank
   m_TagString: Untagged
@@ -129,24 +128,6 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!143 &1879411010777996641
-CharacterController:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1879411010777996643}
-  m_Material: {fileID: 0}
-  m_IsTrigger: 0
-  m_Enabled: 1
-  serializedVersion: 2
-  m_Height: 1.06
-  m_Radius: 0.99
-  m_SlopeLimit: 45
-  m_StepOffset: 0.3
-  m_SkinWidth: 0.08
-  m_MinMoveDistance: 0.001
-  m_Center: {x: 0, y: 0.35, z: 0}
 --- !u!114 &1879411010777996640
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -162,29 +143,19 @@ MonoBehaviour:
   HP: 100
   PlayerUiPrefab: {fileID: 3459700237292253374, guid: 4735ab954dd794589986405ccfa0e7ae,
     type: 3}
-  Player: 1
+  Height: 0
   MainGun: {fileID: 1879411010661442279}
-  CameraOffset: {x: 0, y: 0.2, z: 0.2}
+  CameraOffset: {x: 0, y: 0.29, z: 0.2}
   CameraParent: {fileID: 1879411011181702289}
-  characterController: {fileID: 1879411010777996641}
+  rb: {fileID: 7562809920020705959}
   Jump: {x: 1, y: 1}
-  speed: 6
-  jumpSpeed: 8
+  speed: 600
+  jumpAcceleration: 100
   gravity: 20
---- !u!114 &1879411010777996655
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1879411010777996643}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8dcd95860cb984c0c92a6a5b5db047f1, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  AimingReticule: {fileID: 0}
-  LookingReticule: {fileID: 0}
+  BrakingForce: 5
+  torque: 40
+  LastHit: {fileID: 0}
+  Kills: 0
 --- !u!114 &1879411010777996652
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -215,16 +186,16 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1879411010777996643}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f528b6575c1bb420184c24ac1b0d4125, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  distance: 7
-  height: 3
+  distance: -1.2
+  height: 0.81
   heightSmoothLag: 0.3
   centerOffset: {x: 0, y: 0, z: 0}
-  followOnStart: 0
+  followOnStart: 1
 --- !u!114 &3394456000985237395
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -240,6 +211,22 @@ MonoBehaviour:
   m_SynchronizePosition: 1
   m_SynchronizeRotation: 1
   m_SynchronizeScale: 0
+--- !u!54 &7562809920020705959
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1879411010777996643}
+  serializedVersion: 2
+  m_Mass: 100
+  m_Drag: 1
+  m_AngularDrag: 1
+  m_UseGravity: 1
+  m_IsKinematic: 0
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
 --- !u!1001 &6026010789246945316
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -317,17 +304,22 @@ PrefabInstance:
       propertyPath: TurnSpeed
       value: 90
       objectReference: {fileID: 0}
+    - target: {fileID: 4916327762066569569, guid: 3e7c238fed41e4f579341f7d3fde0bf3,
+        type: 3}
+      propertyPath: viewIdField
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 5311347846782601720, guid: 3e7c238fed41e4f579341f7d3fde0bf3,
         type: 3}
       propertyPath: m_Layer
       value: 2
       objectReference: {fileID: 0}
-    - target: {fileID: 767205092107549591, guid: 3e7c238fed41e4f579341f7d3fde0bf3,
+    - target: {fileID: 5311347846782601726, guid: 3e7c238fed41e4f579341f7d3fde0bf3,
         type: 3}
-      propertyPath: viewIdField
+      propertyPath: m_Enabled
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 4916327762066569569, guid: 3e7c238fed41e4f579341f7d3fde0bf3,
+    - target: {fileID: 767205092107549591, guid: 3e7c238fed41e4f579341f7d3fde0bf3,
         type: 3}
       propertyPath: viewIdField
       value: 0

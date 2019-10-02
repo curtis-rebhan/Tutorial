@@ -6,9 +6,9 @@ using Photon.Pun;
 public class Destructable : MonoBehaviourPunCallbacks, IPunObservable
 {
     public float HP = 100;
-    public virtual float Hit(float Damage)
+    public virtual float Hit(float damage, Tank origin)
     {
-        HP -= Damage;
+        HP -= damage;
         if (HP <= 0)
             Die();
         return HP;
@@ -30,7 +30,7 @@ public class Destructable : MonoBehaviourPunCallbacks, IPunObservable
         }
         else
         {
-            this.HP = (float)stream.ReceiveNext();
+            HP = (float)stream.ReceiveNext();
         }
     }
 

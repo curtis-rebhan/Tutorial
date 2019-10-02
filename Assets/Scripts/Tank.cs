@@ -6,16 +6,25 @@ using UnityEngine.Animations;
 
 public class Tank : Destructable
 {
+    #region Public Fields
     [Tooltip("The Player's UI GameObject Prefab")]
     [SerializeField]
     public GameObject PlayerUiPrefab;
     [Tooltip("The local player instance. Use this to know if the local player is represented in the Scene")]
     public static GameObject LocalPlayerInstance;
-    bool Turret
+    public bool Player
     {
-        get => MainGun is Turret;
+        get => photonView.IsMine;
     }
-    public bool Player;
+    public float Height;
+    public bool IsGrounded
+    {
+        get
+        {
+            float temp = Height;
+            return temp >= 0 && temp <= HoverHeight;
+        }
+    }
     [SerializeField]
     Weapon MainGun;
     [SerializeField]
@@ -23,29 +32,50 @@ public class Tank : Destructable
     [SerializeField]
     public GameObject CameraParent;
     [SerializeField]
-    public CharacterController characterController;
+    public Rigidbody rb;
     public Vector2 Jump = new Vector2(5, 5);
     public float speed = 6.0f;
-    public float jumpSpeed = 8.0f;
+    public float jumpAcceleration = 8.0f;
     public float gravity = 20.0f;
+    public float BrakingForce = 0.8f;
+    public float torque = 1f;
+    public Tank LastHit;
+    public int Kills = 0;
+    public static List<Tank> tanks = new List<Tank>();
+    bool dead;
+    public string NickName
+    {
+        get => photonView.Owner.NickName;
+
+    }
+    #endregion
     private Vector3 moveDirection = Vector3.zero;
+    private float HoverHeight = .4f, maxAngularVelocity = 5, maxVelocity = 90;
     ConstraintSource ConstraintSource;
+    bool Turret
+    {
+        get => MainGun is Turret;
+    }
     bool IsFiring
     {
-        get => MainGun.IsFiring;
+        get => MainGun == null ? false : MainGun.IsFiring;
         set => MainGun.IsFiring = value;
     }
+    #region Monobehavior Callbacks
     // Start is called before the first frame update
     void Start()
     {
         CameraWork _cameraWork = this.gameObject.GetComponent<CameraWork>();
-
-
+        rb.maxAngularVelocity = maxAngularVelocity;
+        tanks.Add(this);
         if (_cameraWork != null)
         {
             if (photonView.IsMine)
             {
-                _cameraWork.OnStartFollowing();
+                //_cameraWork.OnStartFollowing();
+                Camera.main.transform.parent = CameraParent.transform;
+                Camera.main.transform.localPosition = CameraOffset;
+                Camera.main.transform.localRotation = Quaternion.LookRotation(Vector3.forward, Vector3.up);
             }
         }
         else
@@ -67,58 +97,87 @@ public class Tank : Destructable
     // Update is called once per frame
     void Update()
     {
-        if(photonView.IsMine && PhotonNetwork.IsConnected)
+        RaycastHit hit;
+        if (Physics.BoxCast(transform.position + Vector3.up * 0.2f, new Vector3(0.5f, 0.1f, 1), -transform.up, out hit, Quaternion.identity, 20f))
+            Height = hit.distance - 0.2f;
+        else
+            Height = -1;
+        if (photonView.IsMine && PhotonNetwork.IsConnected)
         {
-            float Rotation = Input.GetAxis("Horizontal"), temp = moveDirection.y;
-            transform.Rotate(Vector3.up * Rotation * 45 * Time.deltaTime);
-            moveDirection = new Vector3(Input.GetAxis("HorizontalAlt"), 0.0f, Input.GetAxis("Vertical"));
-            moveDirection *= speed;
-            moveDirection = transform.rotation * moveDirection;
-            // Apply gravity. Gravity is multiplied by deltaTime twice (once here, and once below
-            // when the moveDirection is multiplied by deltaTime). This is because gravity should be applied
-            // as an acceleration (ms^-2)
-            moveDirection.y = temp;
-            moveDirection.y -= gravity * Time.deltaTime;
-
-            if (Input.GetButton("Jump") && Jump.x > 0)
-            {
-                moveDirection.y = jumpSpeed;
-                Jump.x -= Time.deltaTime;
-            }
-            else if (Jump.x < Jump.y && characterController.isGrounded)
-                Jump.x += Time.deltaTime;
-            // Move the controller
-            characterController.Move(moveDirection * Time.deltaTime);
             if (Turret)
                 (MainGun as Turret).ProcessInputs();
-        }
-    }
-    public override void Die()
-    {
-        Debug.Log("Blarg I am become " + HP + " HP");
-        if (photonView.IsMine)
-            GameManager.Instance.LeaveRoom();
-        else
-            base.Die();
-    }
+            float h = Input.GetAxis("HorizontalAlt"), v = Input.GetAxis("Vertical"), turn = Input.GetAxis("Horizontal");
+            if (turn != 0)
+                rb.AddTorque(transform.up * torque * rb.mass * turn * Time.deltaTime);
+            
+            if (Input.GetButton("Jump") && Jump.x > 0)
+            {
+                rb.velocity = new Vector3(rb.velocity.x, jumpAcceleration * Time.deltaTime, rb.velocity.z);
+                rb.useGravity = false;
+            }
+            else
+                rb.useGravity = true;
 
+            rb.AddForce((transform.forward * v + transform.right * h) * rb.mass * Time.deltaTime * speed);
+            if(rb.velocity.magnitude > maxVelocity)
+            {
+                rb.velocity = rb.velocity.normalized * maxVelocity;
+            }
+
+        }
+        
+        if (transform.position.y <= GameManager.KillingFloor)
+            Die();
+    }
+    private void LateUpdate()
+    {
+        //freeze rotation
+        transform.localEulerAngles = new Vector3(0, transform.localEulerAngles.y, 0);
+        if (Height > -.1f && Height < HoverHeight)
+        {
+            if (rb.velocity.y < 0)
+                rb.velocity -= new Vector3(0, rb.velocity.y, 0);
+
+            transform.position += new Vector3(0, HoverHeight - Height);
+        }
+
+    }
     private void Awake()
     {
         // #Important
         // used in GameManager.cs: we keep track of the localPlayer instance to prevent instantiation when levels are synchronized
         if (photonView.IsMine)
         {
-            Player = true;
             Tank.LocalPlayerInstance = this.gameObject;
             //Camera.main.transform.parent = CameraParent.transform;
             //Camera.main.transform.rotation = Quaternion.Euler(Vector3.zero);
             //Camera.main.transform.localPosition = CameraOffset;
             //Camera.main.nearClipPlane = 0.18f;
         }
-        // #Critical
+        // #Critical #NotSoMuch
         // we flag as don't destroy on load so that instance survives level synchronization, thus giving a seamless experience when levels load.
-        DontDestroyOnLoad(this.gameObject);
+        //DontDestroyOnLoad(this.gameObject);
     }
+    #endregion
+    public override void Die()
+    {
+        if (dead)
+            return;
+        dead = true;
+        tanks.Remove(this);
+        if(LastHit != null)
+            LastHit.Kills++;
+        GameManager.Instance.graveyard.Add(new KeyValuePair<string, int>(photonView.Owner.NickName, Kills));
+        if (photonView.IsMine)
+        {
+            GameManager.Instance.LeaveRoom(true);
+        }
+        else
+        {
+            base.Die();
+        }
+    }
+
     #region Scene
     void OnSceneLoaded(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode loadingMode)
     {
@@ -134,19 +193,23 @@ public class Tank : Destructable
         {
             // We own this player: send the others our data
             stream.SendNext(IsFiring);
+            if (Turret)
+                stream.SendNext((MainGun as Turret).IsMissileFiring);
             stream.SendNext(HP);
         }
         else
         {
             // Network player, receive data
             MainGun.IsFiring = (bool)stream.ReceiveNext();
+            if(Turret)
+                (MainGun as Turret).IsMissileFiring = (bool)stream.ReceiveNext();
             this.HP = (float)stream.ReceiveNext();
         }
     }
 
-
+    
     #endregion
-    #region MonoBehaviorCallbacks
+    #region IPunMonoBehaviorCallbacks
     /// <summary>See CalledOnLevelWasLoaded. Outdated in Unity 5.4.</summary>
     void OnLevelWasLoaded(int level)
     {
@@ -171,4 +234,13 @@ public class Tank : Destructable
         UnityEngine.SceneManagement.SceneManager.sceneLoaded -= OnSceneLoaded;
     }
     #endregion
+
+    public override float Hit(float damage, Tank origin)
+    {
+        LastHit = origin;
+        HP -= damage;
+        if (HP <= 0 || rb.mass <= 0)
+            Die();
+        return HP;
+    }
 }

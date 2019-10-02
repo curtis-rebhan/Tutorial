@@ -9,12 +9,12 @@ public class CameraWork : MonoBehaviour
 
     [Tooltip("The distance in the local x-z plane to the target")]
     [SerializeField]
-    private float distance = 7.0f;
+    private float distance = -1.2f;
 
 
     [Tooltip("The height we want the camera to be above the target")]
     [SerializeField]
-    private float height = 3.0f;
+    private float height = 0.81f;
 
 
     [Tooltip("The Smooth time lag for the height of the camera.")]

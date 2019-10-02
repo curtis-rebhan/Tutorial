@@ -9,6 +9,9 @@ EditorBuildSettings:
     path: Assets/Scenes/Launcher.unity
     guid: c84f3ed63582d44c69bb3350d3ba60f2
   - enabled: 1
+    path: Assets/Scenes/LosIng Scene.unity
+    guid: 0747892b83277415697aaf71ae949aa1
+  - enabled: 1
     path: Assets/Scenes/Room for 1.unity
     guid: 29a3158b177714411ae4c783c7dcb8a3
   - enabled: 1
@@ -20,4 +23,7 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/Room for 4.unity
     guid: 16da0fe8a946b44ba98c38a064272cf6
+  - enabled: 1
+    path: Assets/Scenes/Arena.unity
+    guid: 62b3b446d9e8546febbaccb39fd92542
   m_configObjects: {}

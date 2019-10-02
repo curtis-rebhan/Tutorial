@@ -20,7 +20,7 @@ public class PlayerUI : MonoBehaviour
     [SerializeField]
     private Vector3 screenOffset = new Vector3(0f, 30f, 0f);
     private Tank target;
-    float characterControllerHeight = 0f;
+    float characterHeight = 2f;
     Transform targetTransform;
     Renderer targetRenderer;
     CanvasGroup _canvasGroup;
@@ -62,7 +62,7 @@ public class PlayerUI : MonoBehaviour
         if (targetTransform != null)
         {
             targetPosition = targetTransform.position;
-            targetPosition.y += characterControllerHeight;
+            targetPosition.y += characterHeight;
             this.transform.position = Camera.main.WorldToScreenPoint(targetPosition) + screenOffset;
         }
     }
@@ -72,9 +72,15 @@ public class PlayerUI : MonoBehaviour
     #region Public Methods
     public void SetTarget(Tank _target)
     {
+
         if (_target == null)
         {
             Debug.LogError("<Color=Red><a>Missing</a></Color> PlayMakerManager target for PlayerUI.SetTarget.", this);
+            return;
+        }
+        if (_target.Player)
+        {
+            Destroy(gameObject);
             return;
         }
         // Cache references for efficiency
@@ -85,7 +91,7 @@ public class PlayerUI : MonoBehaviour
         // Get data from the Player that won't change during the lifetime of this Component
         if (characterController != null)
         {
-            characterControllerHeight = characterController.height;
+            characterHeight = characterController.height;
         }
         if (playerNameText != null)
         {

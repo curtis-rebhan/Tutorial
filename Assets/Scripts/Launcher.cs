@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using Photon.Pun;
 using Photon.Realtime;
+using UnityEngine.UI;
 
 namespace Com.MyCompany.MyGame
 {
@@ -19,6 +20,10 @@ namespace Com.MyCompany.MyGame
         [Tooltip("The UI Label to inform the user that the connection is in progress")]
         [SerializeField]
         private GameObject progressLabel;
+        [SerializeField]
+        private bool ShowRankings;
+        [SerializeField]
+        Text rankingText;
         #endregion
 
 
@@ -60,6 +65,8 @@ namespace Com.MyCompany.MyGame
         {
             progressLabel.SetActive(false);
             controlPanel.SetActive(true);
+            if (ShowRankings)
+                rankingText.text = "GAME OVER\n" + GameManager.Rankings;
         }
 
 
@@ -93,6 +100,10 @@ namespace Com.MyCompany.MyGame
 				PhotonNetwork.ConnectUsingSettings();
 			}
 		}
+        public void Quit()
+        {
+            Application.Quit();
+        }
 
 
         #endregion
@@ -133,12 +144,12 @@ namespace Com.MyCompany.MyGame
             Debug.Log("PUN Basics Tutorial/Launcher: OnJoinedRoom() called by PUN. Now this client is in a room.");// #Critical: We only load if we are the first player, else we rely on `PhotonNetwork.AutomaticallySyncScene` to sync our instance scene.
             if (PhotonNetwork.CurrentRoom.PlayerCount == 1)
             {
-                Debug.Log("We load the 'Room for 1' ");
+                Debug.Log("We load the 'Arena' ");
 
 
                 // #Critical
                 // Load the Room Level.
-                PhotonNetwork.LoadLevel("Room for 1");
+                PhotonNetwork.LoadLevel("Arena");
             }
         }
 
