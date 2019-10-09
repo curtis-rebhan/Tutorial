@@ -268,7 +268,14 @@ public class Tank : Destructable
         this.CalledOnLevelWasLoaded(level);
     }
 
-
+    [PunRPC]
+    void RPCCollide(int actor1, int actor2, Vector3 v1)
+    {
+        if(PhotonNetwork.LocalPlayer.ActorNumber == actor1)
+        {
+            velocity = v1;
+        }
+    }
     void CalledOnLevelWasLoaded(int level)
     {
         GameObject _uiGo = Instantiate(this.PlayerUiPrefab);
@@ -304,21 +311,22 @@ public class Tank : Destructable
         Tank temp;
         if ((temp = collision.transform.root.GetComponent<Tank>()) != null || (temp = collision.transform.GetComponent<Tank>()) != null)
         {
-            if (Player)
+            if (PhotonNetwork.IsMasterClient)
             {
-                velocity = (transform.position - collision.transform.position).normalized * RelativeVelocity(temp.velocity).magnitude;
+                Vector3 v1 = (transform.position - collision.transform.position).normalized * RelativeVelocity(temp.velocity).magnitude;
+                photonView.RPC("RPCCollide", RpcTarget.All, photonView.OwnerActorNr, temp.photonView.OwnerActorNr, v1);
             }
 
         }
         else
             velocity = (transform.position - collision.transform.position).normalized * RelativeVelocity(Vector3.zero).magnitude;
     }
-    private void OnCollisionStay(Collision collision)
-    {
-        if(velocity.magnitude < maxVelocity / 2 && collision.relativeVelocity.magnitude < maxVelocity)
-            velocity = (transform.position - collision.transform.position).normalized * (maxVelocity / 2);
+    //private void OnCollisionStay(Collision collision)
+    //{
+    //    if (velocity.magnitude < maxVelocity / 2 && collision.relativeVelocity.magnitude < maxVelocity)
+    //        velocity += (transform.position - collision.transform.position).normalized * (maxVelocity / 2) * Time.deltaTime;
 
-        velocity = (transform.position - collision.transform.position).normalized * (velocity.magnitude);
+    //    velocity = (transform.position - collision.transform.position).normalized * (velocity.magnitude);
 
-    }
+    //}
 }
