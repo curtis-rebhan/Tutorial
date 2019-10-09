@@ -24,6 +24,8 @@ namespace Com.MyCompany.MyGame
         private bool ShowRankings;
         [SerializeField]
         Text rankingText;
+        [SerializeField]
+        Text endGameText;
         #endregion
 
 
@@ -66,7 +68,12 @@ namespace Com.MyCompany.MyGame
             progressLabel.SetActive(false);
             controlPanel.SetActive(true);
             if (ShowRankings)
+            {
                 rankingText.text = "GAME OVER\n" + GameManager.Rankings;
+                Debug.Log(GameManager.Rankings);
+                if (!GameManager.Lost)
+                    rankingText.text = "YOU WIN!\n" + GameManager.Rankings;
+            }
         }
 
 
@@ -136,7 +143,7 @@ namespace Com.MyCompany.MyGame
             Debug.Log("PUN Basics Tutorial/Launcher:OnJoinRandomFailed() was called by PUN. No random room available, so we create one.\nCalling: PhotonNetwork.CreateRoom");
 
             // #Critical: we failed to join a random room, maybe none exists or they are all full. No worries, we create a new room.
-            PhotonNetwork.CreateRoom(null, new RoomOptions { MaxPlayers = maxPlayersPerRoom });
+            PhotonNetwork.CreateRoom(null, new RoomOptions { MaxPlayers = maxPlayersPerRoom, PublishUserId = true });
         }
 
         public override void OnJoinedRoom()

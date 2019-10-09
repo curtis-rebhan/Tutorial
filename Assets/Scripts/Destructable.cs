@@ -17,7 +17,7 @@ public class Destructable : MonoBehaviourPunCallbacks, IPunObservable
     {
         Destroy(gameObject);
     }
-
+    
     #region IPunObservable implementation
 
 

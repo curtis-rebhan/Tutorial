@@ -16,7 +16,7 @@ GameObject:
   - component: {fileID: 7530675275572609550}
   m_Layer: 0
   m_Name: Block
-  m_TagString: Untagged
+  m_TagString: Immobile
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -121,4 +121,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dc1871de0c962415890405f705d6db61, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Damage: 0
+  HP: 100

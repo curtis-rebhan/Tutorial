@@ -14,16 +14,70 @@ public class GameManager : MonoBehaviourPunCallbacks
     #region Public Fields
     public static GameManager Instance;
     public GameObject playerPrefab;
+    public Tank localTank;
     public static float KillingFloor = -10;
-    public List<KeyValuePair<string, int>> graveyard = new List<KeyValuePair<string, int>>();
+
+    /// <summary>
+    /// Fancy memory management, so long as i keep the rankingstruct in graveyard on dead tanks the code magically works
+    /// </summary>
+    public List<RankingStruct> graveyard = new List<RankingStruct>();
     public static string Rankings;
- 
+    public static int votes;
+    public GameObject votePrefab;
+    public GameObject canvas;
+    public static bool Lost = false;
+    public int deaths = 0;
+    public struct RankingStruct : IEquatable<RankingStruct>
+    {
+        public static bool operator ==(RankingStruct left, RankingStruct right)
+        {
+            return left.Equals(right);
+        }
+        public static bool operator !=(RankingStruct left, RankingStruct right)
+        {
+            return !left.Equals(right);
+        }
+        public int Kills;
+        public int Death;
+        public string Nickname;
+        public int Honor;
+        public RankingStruct(int kills = 0, string nickname = "", int death = 0, int honor = 0)
+        {
+            Kills = kills;
+            Death = death;
+            Nickname = nickname;
+            Honor = honor;
+        }
+
+        public override bool Equals(object obj)
+        {
+            return obj is RankingStruct && Equals((RankingStruct)obj);
+        }
+
+        public bool Equals(RankingStruct other)
+        {
+            return Kills == other.Kills &&
+                   Death == other.Death &&
+                   Nickname == other.Nickname &&
+                   Honor == other.Honor;
+        }
+
+        public override int GetHashCode()
+        {
+            var hashCode = -386364561;
+            hashCode = hashCode * -1521134295 + Kills.GetHashCode();
+            hashCode = hashCode * -1521134295 + Death.GetHashCode();
+            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(Nickname);
+            hashCode = hashCode * -1521134295 + Honor.GetHashCode();
+            return hashCode;
+        }
+    }
     #endregion
 
     #region Private Fields
-    bool Lost = false;
     [SerializeField]
     Text RankingText;
+    int playerGraveyardIndex = -1;
     bool update = true;
     #endregion
 
@@ -51,7 +105,8 @@ public class GameManager : MonoBehaviourPunCallbacks
     public override void OnPlayerLeftRoom(Player otherPlayer)
     {
         Debug.LogFormat("OnPlayerLeftRoom() {0}", otherPlayer.NickName); // seen when other disconnects
-        
+        if (PhotonNetwork.CurrentRoom.PlayerCount == 1)
+            LeaveRoom(false);
 
         if (PhotonNetwork.IsMasterClient)
         {
@@ -65,42 +120,75 @@ public class GameManager : MonoBehaviourPunCallbacks
 
 
     #region Public Methods
-
+    public void Vote(string id, int vote)
+    {
+        photonView.RPC("RemoteVote", RpcTarget.AllBuffered, id, vote);
+    }
+    [PunRPC]
+    public void RemoteVote(string id, int vote)
+    {
+        if (PhotonNetwork.LocalPlayer.UserId == id)
+        {
+            votes += vote;
+            if(localTank == null)
+            {
+                Debug.Log("Fail");
+                return;
+            }
+            localTank.RankingStruct.Honor = votes;
+            //if (localTank.dead)//proc serialize view
+            //    localTank.HP--;
+        }
+    }
+    public void PlayerDeath()
+    {
+        int i = 0;
+        foreach(KeyValuePair<int, Player> P in PhotonNetwork.CurrentRoom.Players)
+        {
+            GameObject prefab = Instantiate(votePrefab);
+            prefab.transform.SetParent(canvas.transform);
+            prefab.transform.localPosition = new Vector3(0, 20 + (-i++) * 30);
+            prefab.GetComponent<Voting>().Setup(P.Value, P.Value.UserId);
+        }
+    }
     public static void ResetRanking()
     {
+        Debug.Log("Resetting Rankings");
         Rankings = "";
     }
     public void LeaveRoom(bool lost)
     {
-        this.Lost = lost;
+        Lost = lost;
         LeaveRoom();
     }
     public void LeaveRoom()
     {
-        GetRankings();
         update = false;
+        if (localTank != null)
+            localTank.photonView.RPC("DestroyTank", RpcTarget.AllBuffered);
         PhotonNetwork.LeaveRoom();
     }
 
     public string GetRankings()
     {
-        List<KeyValuePair<string, int>> pairs = new List<KeyValuePair<string, int>>();
-
+        List<RankingStruct> pairs = new List<RankingStruct>();
+        //graveyard.Sort((x, y) => (y.Death.CompareTo(x.Death)));
         foreach (Tank tank in Tank.tanks)
         {
             if(tank != null)
-            pairs.Add(new KeyValuePair<string, int>(tank.NickName, tank.Kills));
+                pairs.Add(tank.RankingStruct);
         }
-        foreach(KeyValuePair<string, int> tank in graveyard)
+        foreach(RankingStruct tank in graveyard)
         {
             pairs.Add(tank);
         }
-        pairs.Sort((x, y) => (y.Value.CompareTo(x.Value)));
+        pairs.Sort((x, y) => (y.Kills.CompareTo(x.Kills))); // Living tanks Compare by kills
+        //pairs.AddRange(graveyard); //add dead players
         string rankingString = "";
         int i = 0;
-        foreach(KeyValuePair<string, int> pair in pairs)
+        foreach(RankingStruct pair in pairs)
         {
-            rankingString += ++i + ": " + pair.Key + ", Kills: " + pair.Value;
+            rankingString += ++i + ": " + pair.Nickname + ", Kills: " + pair.Kills + " Honor: " + pair.Honor;
             rankingString += "\n";
         }
         Rankings = rankingString;
@@ -125,7 +213,6 @@ public class GameManager : MonoBehaviourPunCallbacks
     private void Start()
     {
         Instance = this;
-        ResetRanking();
         if (playerPrefab == null)
         {
             Debug.LogError("<Color=Red><a>Missing</a></Color> playerPrefab Reference. Please set it up in GameObject 'Game Manager'", this);
@@ -146,10 +233,11 @@ public class GameManager : MonoBehaviourPunCallbacks
     }
     private void Update()
     {
+        RankingText.text = Rankings;
         if (!update)
             return;
         GetRankings();
-        RankingText.text = Rankings;
     }
+    
     #endregion
 }

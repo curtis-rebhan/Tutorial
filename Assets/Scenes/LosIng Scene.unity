@@ -727,7 +727,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 34, y: 66}
+  m_AnchoredPosition: {x: 34, y: 28.5}
   m_SizeDelta: {x: 174.8, y: 121.72}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &927882199
@@ -763,7 +763,9 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: Game Over
+  m_Text: 'Game Over, You lose
+
+    Better luck next time'
 --- !u!222 &927882200
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -1370,6 +1372,7 @@ MonoBehaviour:
   progressLabel: {fileID: 1456495875}
   ShowRankings: 1
   rankingText: {fileID: 927882199}
+  endGameText: {fileID: 0}
 --- !u!1 &1747189475
 GameObject:
   m_ObjectHideFlags: 0
